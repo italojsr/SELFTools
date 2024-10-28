@@ -296,7 +296,35 @@ class ReleFTP(Rele):
             
         return rid
             
+    def verificar_modelo(self):
+        arquivo_atualizado = "{}_{}_CFG__atualizado.TXT".format(self.subestacao,self.equipamento)
+        if("CFG.TXT" in self.ftp.nlst()):
+            # Escreve os dados remotos no arquivo local
+            with open(arquivo_atualizado,'wb') as arquivo_local: 
+                self.ftp.retrbinary('RETR CFG.TXT',arquivo_local.write)
 
+        elif('SETTINGS' in self.ftp.nlst()):
+            self.ftp.cwd('SETTINGS') 
+
+        # Abre um novo arquivo local
+            with open(arquivo_atualizado,'wb') as arquivo_local: 
+                # Escreve os dados remotos no arquivo local
+                self.ftp.retrbinary('RETR CFG.TXT',arquivo_local.write) 
+        else:
+            print("CFG.TXT não foi encontrado nos diretórios baixados")
+            return None
+
+        # Abre o arquivo baixado e verifica o rid
+        arq1 = self.abrir_arquivo(arquivo_atualizado)
+        rtype = arq1.verificar_parametro("RELAYTYPE")
+        rtype = rtype.split("=")[1]
+        if('7' in rtype):
+            return '700'
+        if('3' in rtype):
+            return '300'
+        else:
+            return 'other'
+        
     def baixar_arquivos_ftp(self,nome_arq_rele):
         # Baixa o arquivo solicitado por conexão FTP
         # nome_arq_rele - nome do arquivo do Rele que se deseja baixar (ex SET_G.TXT)
