@@ -44,7 +44,7 @@ arq = rl.abrir_arquivo(atualizado)
 # Faz backup 
 backup = arq.fazer_backup()
 
-# Atualiza a lógica de um parâmetro
+# Escolhe o parâmetro que será atualizado e o novo valor que ele vai receber.
 arq.atualizar_parametro('TR','RB20 # 51P1T OR 51G1T OR 51N1T OR 50P1T OR 50G1T OR 50N1T OR IN407 # IN407 = GAS T2')
 
 # Envia para o relé após validação com o arquivo backup
