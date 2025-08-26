@@ -220,10 +220,14 @@ class Parametro:
 class ReleFTP(Rele):
     def __init__(self,ip,usuario,senha,subestacao,equipamento):
         super().__init__(ip,usuario,senha,subestacao,equipamento)
-        self.ftp = FTP(ip,usuario,senha,timeout = 30)
-        status = self.ftp.getwelcome()
-        print(status)
-        self.nome_arq_rele = None # Nome do arquivo que vai ser baixado
+        try:
+            self.ftp = FTP(ip,usuario,senha,timeout=30)
+            status = self.ftp.getwelcome()
+            print(status)
+        except Exception as e:
+            print(f"Erro ao conectar via FTP: {e}")
+            self.ftp = None
+        self.nome_arq_rele = None  # Nome do arquivo que vai ser baixado
 
     def is_connection_alive(self):
         try:
