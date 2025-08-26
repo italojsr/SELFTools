@@ -69,8 +69,49 @@ backup = arq.fazer_backup()
 # Lista as OUTS atuais do equipamento
 arq.lista_outs()
 
+'''
+Exemplo : 
+
+['OUT101FS,"N"\n',
+ 'OUT101,"TRIP # TRIP PROTECAO"\n',
+ 'OUT102FS,"N"\n',
+ 'OUT102,"SV03T # ABERTURA"\n',
+ 'OUT103FS,"N"\n',
+ 'OUT103,"CLOSE # FECHAMENTO OU RELIGAMENTO"\n',
+ 'OUT103FS,"N"\n',
+ 'OUT301FS,"N"\n',
+ 'OUT301,"CLOSE AND NOT IN303 # FECHAMENTO PELA BOBINA 2"\n',
+ 'OUT302FS,"N"\n',
+ 'OUT302,"LT06 # SAIDA WATCHDOG"\n',
+ 'OUT303FS,"N"\n',
+ 'OUT303,"(TRIP OR SV03T) AND NOT IN302 # TRIP OU ABERTURA PELA BOBINA 2"\n',
+ 'OUT304FS,"N"\n',
+ 'OUT304,"LT17 # SAIDA PARA  RELE AUX  DE CORTE DE TENSAO CC DO MOTOR"\n']
+'''
+
 # Mostra como as OUTs ficam após o comentário
 arq.comenta_outs()
+
+'''
+Exemplo : 
+
+['OUT101FS,"N"\n',
+ 'OUT101,"0 # TRIP # TRIP PROTECAO"\n',
+ 'OUT102FS,"N"\n',
+ 'OUT102,"0 # SV03T # ABERTURA"\n',
+ 'OUT103FS,"N"\n',
+ 'OUT103,"0 # N"\n',
+ 'OUT103FS,"N"\n',
+ 'OUT301FS,"N"\n',
+ 'OUT301,"0 # CLOSE AND NOT IN303 # FECHAMENTO PELA BOBINA 2"\n',
+ 'OUT302FS,"N"\n',
+ 'OUT302,"0 # LT06 # SAIDA WATCHDOG"\n',
+ 'OUT303FS,"N"\n',
+ 'OUT303,"0 # (TRIP OR SV03T) AND NOT IN302 # TRIP OU ABERTURA PELA BOBINA 2"\n',
+ 'OUT304FS,"N"\n',
+ 'OUT304,"0 # LT17 # SAIDA PARA  RELE AUX  DE CORTE DE TENSAO CC DO MOTOR"\n']
+
+'''
 
 # Envia o arquivo com as OUTs modificadas
 rl.enviar_arquivo_atualizado(backup,'LAB_751_105_SET_L1__atualizado.TXT','SET_L1.TXT')
