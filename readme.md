@@ -38,8 +38,7 @@ ARQ = 'SET_1.TXT'
 rl.baixar_arquivos_ftp(ARQ)
 
 # Abre o arquivo desejado
-ARQ = ARQ.split(".")[0]
-atualizado = f'{SE}_{EQP}_{ARQ}__atualizado.TXT'
+atualizado = 'LAB_ALTA_T1_SET_1__atualizado.TXT'
 arq = rl.abrir_arquivo(atualizado)
 
 # Faz backup 
