@@ -3,7 +3,7 @@ import pandas as pd
 import shutil
 import os
 import re
-
+from time import sleep
 class Rele:
     def __init__(self,ip,usuario,senha,subestacao,equipamento):
         self.ip = ip
@@ -33,7 +33,7 @@ class Arquivo(Rele):
     # Verifica se já existe um backup e faz backup se não existir
     def fazer_backup(self):
         # Cria o nome do arquivo txt de backup (SE_RIDI_SET_G_backup x.TXT)
-        nome_backup = '{}_{}_{}'.format(self.subestacao,self.equipamento,self.nome_grupo) + '__backup' + self.nome_extensao
+        nome_backup = self.subestacao + '_' + self.equipamento + '_' + self.nome_grupo + '__backup' + self.nome_extensao
         # Se já existe backup retorna o existente
         if(os.path.exists(nome_backup) == True):
             pass
@@ -80,6 +80,31 @@ class Arquivo(Rele):
             return valor_parametro
         except:
             return None
+
+    def lista_outs(self):
+        with open(self.nome_arq_baixado,"r") as arquivo:
+                linhas = arquivo.readlines()
+                lista_outs = []
+                for i,linha in enumerate(linhas):
+                    # Se o nome do parâmetro foi encontrado na linha...
+                    if linha.startswith('OUT') == True: 
+                        lista_outs.append(linha)
+        return lista_outs
+
+    def comenta_outs(self):
+        lista_outs = self.lista_outs()
+        for logica in lista_outs:
+            # Quebra logica pela virgula e pega o nome da OUT
+            OUTx = logica.split(',')[0]
+            # FIltra apenas as OUTs que tem valores
+            if(len(OUTx) == 6):
+                valor_out = self.verificar_parametro(OUTx)
+                novo_valor = '0 # ' + valor_out
+                self.atualizar_parametro(OUTx,novo_valor)
+            else:
+                continue
+            nova_lista_outs = self.lista_outs()
+        return nova_lista_outs
         
     def verificar_portas(self):
         lista_portas = []
@@ -126,66 +151,22 @@ class Arquivo(Rele):
                         referencias.append(par.get_nome_parametro())
 
         return referencias
-    def atualizar_parametro(self,parametro,valor,nome_exato = True,contem_nome = False):
-        with open(self.nome_arq_baixado,"r") as arquivo:
-            linhas = arquivo.readlines()
-            
-            # Procura o parâmetro pelo nome exato
-            if((contem_nome == False) and (nome_exato == True)):
-                for i,linha in enumerate(linhas):
-                    # Se o nome do parâmetro foi encontrado na linha...
-                        if linha.startswith(parametro + ',') == True: 
-                        
-                            # Endereço da linha do parâmetro
-                            indice = i
-                            linha_p = linha
-                            
-                            # Delimitação de onde começa e termina a string do valor do parâmetro
-                            inicio = linha_p.find("\"")+ 1
-                            final = linha_p.find("\"",inicio)
-                            
-                            # Printa o valor do parâmetro antes da mudança
-                            #print("O valor antes da atualização era {}".format(linha_p))
-                            
-                            #Atualiza o valor da linha do parâmetro
-                            linha_p = linha_p.replace(linha[inicio:final],valor) # Corrigir isso aqui
-                            
-                            # Printa o valor do parâmetro depois da mudança
-                            #print("O valor depois da atualização é {}".format(linha_p))
-                            
-                            # Colocando a linha atualizada no novo arquivo
-                            linhas[i] = linha_p
-                            break
-            # Procura o primeiro nome que mais se aproxima do parametro procurado
-            elif((contem_nome == True) and (nome_exato == False)):
-                for i,linha in enumerate(linhas):
-                    # Se o nome do parâmetro foi encontrado na linha...
-                    if linha.find(parametro) != -1: 
-                    
-                        # Endereço da linha do parâmetro
-                        indice = i
-                        linha_p = linha
-                        
-                        # Delimitação de onde começa e termina a string do valor do parâmetro
-                        inicio = linha_p.find("\"")+ 1
-                        final = linha_p.find("\"",inicio)
-                        
-                        # Printa o valor do parâmetro antes da mudança
-                        #print("O valor antes da atualização era {}".format(linha_p))
-                        
-                        #Atualiza o valor da linha do parâmetro
-                        linha_p = linha_p.replace(linha[inicio:final],valor) # Corrigir isso aqui
-                        
-                        # Printa o valor do parâmetro depois da mudança
-                        #print("O valor depois da atualização é {}".format(linha_p))
-                        
-                        # Colocando a linha atualizada no novo arquivo
-                        linhas[i] = linha_p
-                        break
+    def atualizar_parametro(self,parametro,novo_valor):
+    # Compilando o padrão de regex para o parâmetro seguido de uma vírgula e o valor
+        padrao = re.compile(rf"^{parametro},.*$", re.MULTILINE)
 
-        with open(self.nome_arq_baixado,"w") as arquivo:
-            # Escrevendo linhas atualizadas no arquivo
-            arquivo.writelines(linhas)
+        with open(self.nome_arq_baixado,"r") as arquivo:
+            conteudo = arquivo.read()
+
+        # Substituindo o valor correspondente ao parâmetro
+        conteudo_modificado = re.sub(
+            padrao, 
+            f"""{parametro},"{novo_valor}" """, 
+            conteudo
+        )
+
+        with open(self.nome_arq_baixado, 'w') as arquivo:
+            arquivo.write(conteudo_modificado)
 
     def verificar_compatibilidade(self,arquivo_backup):
         # arquivo_backup - String com o nome do primeiro arquivo com .txt
@@ -197,14 +178,16 @@ class Arquivo(Rele):
         # Conta o número de linhas que estão no cabeçalho do arquivo para pulá-las
         with open(arquivo_backup, "r") as arquivo:
             for linha in arquivo.readlines():
-                linhas_puladas1+=1
                 if((linha.find("[") != -1) and (linha != "[INFO]\n")): 
                     break
+                else:
+                    linhas_puladas1+=1
         with open(self.nome_arq_baixado, "r") as arquivo:
             for linha in arquivo.readlines():
-                linhas_puladas2+=1
                 if((linha.find("[") != -1) and (linha != "[INFO]\n")):
                     break
+                else:
+                    linhas_puladas2+=1
         # Lê os arquivos pulando as primeiras linhas
         arq_backup = pd.read_csv(arquivo_backup,skiprows = linhas_puladas1,sep = ',')
         arq_atualizado = pd.read_csv(self.nome_arq_baixado,skiprows = linhas_puladas2,sep = ',')
@@ -241,6 +224,14 @@ class ReleFTP(Rele):
         status = self.ftp.getwelcome()
         print(status)
         self.nome_arq_rele = None # Nome do arquivo que vai ser baixado
+
+    def is_connection_alive(self):
+        try:
+            # Send a "no operation" command to check the connection
+            self.ftp.voidcmd("NOOP")
+            return True
+        except:
+            return False
         
     def verificar_rid_ftp(self):
         # Baixa o arquivo do primeiro grupo do relé e verifica a identificação dele (RID)
@@ -328,6 +319,7 @@ class ReleFTP(Rele):
     def baixar_arquivos_ftp(self,nome_arq_rele):
         # Baixa o arquivo solicitado por conexão FTP
         # nome_arq_rele - nome do arquivo do Rele que se deseja baixar (ex SET_G.TXT)
+
         self.nome_arq_rele = nome_arq_rele
         nome_grupo = nome_arq_rele.split('.')[0]
         nome_extensao = '.' +  nome_arq_rele.split('.')[1]
@@ -360,23 +352,42 @@ class ReleFTP(Rele):
             print("{} não foi encontrado nos diretórios baixados".format(nome_arq_rele))
             
 
-    def enviar_arquivo_atualizado(self,arquivo_backup,arquivo_atualizado):
+    def enviar_arquivo_atualizado(self,arquivo_backup,arquivo_atualizado,grupo_modificado):
         # arquivo_backup - Nome de um dos backups para verificar compatibilidade (Ex : SE_RIDI_SET_X_backup 1.TXT)
         # arquivo_atualizado - Nome do arquivo que será enviado (Ex : SE_RIDI_SET_X_atualizado.TXT)
+        # grupo modificado - Nome do grupo modificado (SET_G.TXT,SET_1.TXT,etc)
+        if (self.is_connection_alive):
+            pass
+        else:
+            print(f'Conexão FTP com {self.equipamento} caiu. Tentando restaurar')
+            self.ftp =  FTP(self.ip,self.usuario,self.senha,timeout = 30)
+
         arq = Arquivo(arquivo_atualizado,self.ip,self.usuario,self.senha,self.subestacao,self.equipamento)
         diferencas = arq.verificar_compatibilidade(arquivo_backup)
         # Se a diferença entre o backup e o arquivo atualizado é menor que dois...
-        if(diferencas<=2):
+        if(diferencas<=10):
             with open(arquivo_atualizado, "rb") as file:
                 # Faz o upload das alterações de arquivo_atualizado no arquivo do Rele
-                self.ftp.storbinary("STOR " + self.nome_arq_rele,file)
+                self.ftp.storbinary("STOR " + grupo_modificado,file)
+
+            
+            # Verifica se após enviar novas alterações a comunicação ainda está ativa (No caso da Porta 1 a comunicação cai)
+            if (self.is_connection_alive):
+                pass
+            else:
+                # Se a comunicação caiu, espera 10 segundos para restaurar
+                sleep(10)
+                print(f'Conexão FTP com {self.equipamento} caiu. Tentando restaurar')
+                self.ftp =  FTP(self.ip,self.usuario,self.senha,timeout = 30)
 
             # Baixa os arquivos após enviar as alterações para verificar se houve alterações
             arquivo_pos_alteracao = arquivo_atualizado.split("_atualizado")[0] + '__baixado' + arquivo_atualizado.split("_atualizado")[1]
+            print('RETR ' + grupo_modificado)
             with open(arquivo_pos_alteracao,'wb') as arquivo_local: 
-                self.ftp.retrbinary('RETR ' + self.nome_arq_rele,arquivo_local.write)
+                self.ftp.retrbinary('RETR ' + grupo_modificado,arquivo_local.write)
             arq_pos_ajuste = Arquivo(arquivo_pos_alteracao,self.ip,self.usuario,self.senha,self.subestacao,self.equipamento)
             diferencas_pos_ajuste = arq_pos_ajuste.verificar_compatibilidade(arquivo_atualizado)
+
             if(diferencas_pos_ajuste == 0):
                 print("As alterações foram enviadas com sucesso")
                 return True
@@ -387,15 +398,20 @@ class ReleFTP(Rele):
             print("Está tentando se enviar um arquivo que tem {} parâmetros diferentes do original".format(diferencas))
 
     
-    def enviar_backup(self,arquivo_backup,nome_arq_rele):
+    def enviar_backup(self,arquivo_backup,grupo_modificado):
         # arquivo_backup - Nome do arquivo de backup
-        # nome_arq_rele - Nome do arquivo do relé (SET_G.TXT,SET_1.TXT, etc)
+        # grupo_modificado - Nome do arquivo do relé (SET_G.TXT,SET_1.TXT, etc)
+        if(self.is_connection_alive):
+            pass
+        else:
+            print(f'Conexão FTP com {self.equipamento} caiu. Tentando restaurar')
+            self.ftp =  FTP(self.ip,self.usuario,self.senha,timeout = 30)
 
-        if(nome_arq_rele in self.ftp.nlst()):
+        if(grupo_modificado in self.ftp.nlst()):
 
             with open(arquivo_backup, "rb") as file:
                 # Faz o upload das alterações de arquivo_atualizado no arquivo do Rele
-                self.ftp.storbinary("STOR " + nome_arq_rele,file)
+                self.ftp.storbinary("STOR " + grupo_modificado,file)
 
         # Se o nome do arquivo não está dentro dessa pasta, entre na pasta SETTINGS     
         #    
@@ -404,15 +420,22 @@ class ReleFTP(Rele):
             # Abre um novo arquivo local
             with open(arquivo_backup, "rb") as file:
                 # Faz o upload das alterações de arquivo_atualizado no arquivo do Rele
-                self.ftp.storbinary("STOR " + nome_arq_rele,file)
+                self.ftp.storbinary("STOR " + grupo_modificado,file)
 
 
-
+        # Verifica se após enviar novas alterações a comunicação ainda está ativa (No caso da Porta 1 a comunicação cai)
+        if (self.is_connection_alive):
+            pass
+        else:
+            # Se a comunicação caiu, espera 10 segundos para restaurar
+            sleep(10)
+            print(f'Conexão FTP com {self.equipamento} caiu. Tentando restaurar')
+            self.ftp =  FTP(self.ip,self.usuario,self.senha,timeout = 30)
 
         # Baixa os arquivos após enviar as alterações para verificar se houve alterações
         arquivo_pos_alteracao = arquivo_backup.split("__backup")[0] + '__baixado' + arquivo_backup.split("__backup")[1]
         with open(arquivo_pos_alteracao,'wb') as arquivo_local: 
-            self.ftp.retrbinary('RETR ' + nome_arq_rele,arquivo_local.write)
+            self.ftp.retrbinary('RETR ' + grupo_modificado,arquivo_local.write)
         arq_pos_ajuste = Arquivo(arquivo_pos_alteracao,self.ip,self.usuario,self.senha,self.subestacao,self.equipamento)
         diferencas_pos_ajuste = arq_pos_ajuste.verificar_compatibilidade(arquivo_backup)
         if(diferencas_pos_ajuste == 0):
