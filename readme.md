@@ -33,14 +33,14 @@ O objetivo é simplificar tarefas de manutenção e gestão de relés, reduzindo
 SE = 'LAB'
 EQP = 'ALTA_T1'
 IP = '10.10.10.10'
-rl = ReleFTP(IP,'2AC','TAIL',SE,EQP)
+rl = ReleFTP(IP,'2AC',['SENHA1','SENHA2'],SE,EQP)
 
 # Baixa o arquivo desejado
 ARQ = 'SET_1.TXT'
 rl.baixar_arquivos_ftp(ARQ)
 
 # Abre o arquivo desejado
-atualizado = 'LAB_ALTA_T1_SET_1__atualizado.TXT'
+atualizado = 'Enviado/LAB_ALTA_T1_SET_1__atualizado.TXT'
 arq = rl.abrir_arquivo(atualizado)
 
 # Faz backup 
@@ -59,13 +59,13 @@ rl.enviar_arquivo_atualizado(backup,atualizado)
 SE = 'LAB'
 EQP = '751_105'
 IP = '10.82.125.105'
-rl = ReleFTP(IP,'2AC','TAIL',SE,EQP)
+rl = ReleFTP(IP,'2AC',['SENHA1','SENHA2'],SE,EQP)
 
 # Baixa o arquivo que for especificado (SET_L1 -> Lógicas do grupo 1)
 rl.baixar_arquivos_ftp('SET_L1.TXT')
 
 # Abre o arquivo baixado e faz o backup
-arq = rl.abrir_arquivo('LAB_751_105_SET_L1__atualizado.TXT')
+arq = rl.abrir_arquivo('Enviado/LAB_751_105_SET_L1__atualizado.TXT')
 backup = arq.fazer_backup()
 
 # Lista as OUTS atuais do equipamento
