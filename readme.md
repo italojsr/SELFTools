@@ -1,4 +1,4 @@
-# SELFTools Library
+# SELFTools 
 
 Esta biblioteca em Python foi desenvolvida para facilitar a comunicação e automação de processos em relés SEL via protocolo FTP.  
 Ela permite estabelecer conexões seguras com os equipamentos, realizar **backups de arquivos de configuração**, **atualizar e enviar parâmetros automaticamente**, além de disponibilizar ferramentas para **testar o mapa DNP3** e **listar o uso de lógicas internas**.  
