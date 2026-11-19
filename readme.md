@@ -126,6 +126,6 @@ rl.enviar_arquivo_atualizado(backup,'LAB_751_105_SET_L1__atualizado.TXT','SET_L1
 Clone este repositório e instale as dependências:
 
 ```bash
-git clone https://github.com/italojsr/Classes-FTP-/tree/master
+git clone https://github.com/italojsr/SELFTools/tree/master
 cd sel-ftp-library
 pip install -r requirements.txt
