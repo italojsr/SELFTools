@@ -3,7 +3,9 @@
 Esta biblioteca em Python foi desenvolvida para facilitar a comunicação e automação de processos em relés SEL via protocolo FTP.  
 Ela permite estabelecer conexões seguras com os equipamentos, realizar **backups de arquivos de configuração**, **atualizar e enviar parâmetros automaticamente**, além de disponibilizar ferramentas para **testar o mapa DNP3** e **listar o uso de lógicas internas**.  
 
-O objetivo é simplificar tarefas de manutenção e gestão de relés, reduzindo o tempo de operação e aumentando a confiabilidade dos processos.
+O objetivo é simplificar tarefas de manutenção e gestão de relés, reduzindo o tempo de operação e aumentando a confiabilidade dos processos. 
+
+**Para ter um overview de como funciona a biblioteca na prática existem arquivos de demonstrações na respectiva pasta**.
 
 
 <p align="center">
